@@ -7,7 +7,7 @@ import sys
 pygame.init()
 
 # 화면 설정
-screen_size = 620
+screen_size = 630
 screen = pygame.display.set_mode((screen_size, screen_size))
 pygame.display.set_caption('Snake Game')
 
@@ -20,27 +20,28 @@ GREEN = (0, 255, 0)
 clock = pygame.time.Clock()
 FPS = 60
 
-# 추가 설정
+# 캐릭터 설정
 class Snake(pygame.Rect):
-    def __init__(self, x, y, width, height):
-        super().__init__(x, y, width, height)
+    def __init__(self, size):
+        super().__init__(0, size * (screen_size // (2 * size)), size, size)
         
     def new_tail(self):
         while True:
-            x = snake.width * randint(0, int(screen_size / snake.width) - 1)
-            y = snake.width * randint(0, int(screen_size / snake.width) - 1)
+            x = snake.size[0] * randint(0, int(screen_size / snake.size[0]) - 1)
+            y = snake.size[0] * randint(0, int(screen_size / snake.size[0]) - 1)
             if (x, y) not in snake.body:
                 break
-        self.tail = pygame.Rect(x, y, snake.width, snake.width)
+        self.tail = pygame.Rect(x, y, snake.size[0], snake.size[0])
 
-snake = Snake(0, 40 * (screen_size // 80), 40, 40)
+snake = Snake(30)
 snake.direction = 'R'
 snake.next_direction = 'R'
 snake.speed = 5
-snake.overlap = snake.width // snake.speed
+snake.overlap = snake.size[0] // snake.speed
 snake.body = [(snake.x, snake.y)]
 snake.new_tail()
 
+# 시작 시간 측정
 start_time = time.time()
 
 # 게임 루프
@@ -61,7 +62,7 @@ while running:
     if keys[pygame.K_RIGHT] and snake.direction != 'L':
         snake.next_direction = 'R'
     
-    if snake.x % snake.width == 0 and snake.y % snake.width == 0:
+    if snake.x % snake.size[0] == 0 and snake.y % snake.size[0] == 0:
         snake.direction = snake.next_direction
     
     if snake.direction == 'U':
@@ -73,7 +74,7 @@ while running:
     if snake.direction == 'R':
         snake.x += snake.speed
 
-    if snake.x < 0 or snake.x + snake.width > screen_size or snake.y < 0 or snake.y + snake.width > screen_size:
+    if snake.x < 0 or snake.x + snake.size[0] > screen_size or snake.y < 0 or snake.y + snake.size[0] > screen_size:
         running = False
 
     if snake.colliderect(snake.tail):
@@ -87,14 +88,13 @@ while running:
     # 화면 그리기
     screen.fill(BLACK)
     
-    # 여기에서 다양한 객체들을 그릴 수 있습니다.
-    # 예: pygame.draw.rect(screen, WHITE, (x, y, width, height))
+    # 캐릭터 그리기
     for s in snake.body[:2 * snake.overlap + 2]:
-        pygame.draw.rect(screen, RED, (s[0], s[1], snake.width, snake.width))
+        pygame.draw.rect(screen, RED, (s[0], s[1], snake.size[0], snake.size[0]))
     for s in snake.body[2 * snake.overlap + 2:]:
-        if snake.colliderect(pygame.Rect(s[0], s[1], snake.width, snake.width)):
+        if snake.colliderect(pygame.Rect(s[0], s[1], snake.size[0], snake.size[0])):
             running = False
-        pygame.draw.rect(screen, RED, (s[0], s[1], snake.width, snake.width))
+        pygame.draw.rect(screen, RED, (s[0], s[1], snake.size[0], snake.size[0]))
     pygame.draw.rect(screen, GREEN, snake.tail)
 
     # 화면 업데이트
@@ -103,8 +103,9 @@ while running:
     # FPS 맞추기
     clock.tick(FPS)
 
-elapsed_time = time.time() - start_time
-print(f'{round(((len(snake.body) // snake.overlap) ** 3) / elapsed_time, 3)}')
+# 경과 시간 측정 및 점수 출력
+elapsed_time = (time.time() - start_time)
+print(round(((len(snake.body) // snake.overlap) ** 3) / elapsed_time, 3))
 
 # 게임 종료
 pygame.quit()

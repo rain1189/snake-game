@@ -1,4 +1,5 @@
 import pygame
+import time
 from random import *
 import sys
 
@@ -32,13 +33,15 @@ class Snake(pygame.Rect):
                 break
         self.tail = pygame.Rect(x, y, snake.width, snake.width)
 
-snake = Snake(0, 20 * (screen_size // 40), 20, 20)
-snake.body = [(snake.x, snake.y)]
-snake.direction = ['R', 'D', 'L', 'U']
+snake = Snake(0, 40 * (screen_size // 80), 40, 40)
+snake.direction = 'R'
+snake.next_direction = 'R'
 snake.speed = 5
+snake.overlap = snake.width // snake.speed
+snake.body = [(snake.x, snake.y)]
 snake.new_tail()
 
-released = [True, True]
+start_time = time.time()
 
 # 게임 루프
 running = True
@@ -48,38 +51,34 @@ while running:
             running = False
 
     # 게임 로직 업데이트
-    if snake.x % snake.width == 0 and snake.y % snake.width == 0:
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT]:
-            if released[0]:
-                snake.direction.insert(0, snake.direction[-1])
-                del snake.direction[-1]
-                released[0] = False
-        else:
-            released[0] = True
-        if keys[pygame.K_RIGHT]:
-            if released[1]:
-                snake.direction.append(snake.direction[0])
-                del snake.direction[0]
-                released[1] = False 
-        else:
-            released[1] = True
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_UP] and snake.direction != 'D':
+        snake.next_direction = 'U'
+    if keys[pygame.K_DOWN] and snake.direction != 'U':
+        snake.next_direction = 'D'
+    if keys[pygame.K_LEFT] and snake.direction != 'R':
+        snake.next_direction = 'L'
+    if keys[pygame.K_RIGHT] and snake.direction != 'L':
+        snake.next_direction = 'R'
     
-    if snake.direction[0] == 'U':
+    if snake.x % snake.width == 0 and snake.y % snake.width == 0:
+        snake.direction = snake.next_direction
+    
+    if snake.direction == 'U':
         snake.y -= snake.speed
-    if snake.direction[0] == 'D':
+    if snake.direction == 'D':
         snake.y += snake.speed
-    if snake.direction[0] == 'L':
+    if snake.direction == 'L':
         snake.x -= snake.speed
-    if snake.direction[0] == 'R':
+    if snake.direction == 'R':
         snake.x += snake.speed
 
     if snake.x < 0 or snake.x + snake.width > screen_size or snake.y < 0 or snake.y + snake.width > screen_size:
         running = False
 
     if snake.colliderect(snake.tail):
-        for i in range(4):
-            snake.body.append((-20,-20))
+        for i in range(snake.overlap):
+            snake.body.append(snake.body[-1])
         snake.new_tail()
 
     snake.body.insert(0, (snake.x , snake.y))
@@ -90,12 +89,11 @@ while running:
     
     # 여기에서 다양한 객체들을 그릴 수 있습니다.
     # 예: pygame.draw.rect(screen, WHITE, (x, y, width, height))
-    for s in snake.body[:8]:
+    for s in snake.body[:2 * snake.overlap + 2]:
         pygame.draw.rect(screen, RED, (s[0], s[1], snake.width, snake.width))
-    for s in snake.body[8:]:
+    for s in snake.body[2 * snake.overlap + 2:]:
         if snake.colliderect(pygame.Rect(s[0], s[1], snake.width, snake.width)):
             running = False
-            break
         pygame.draw.rect(screen, RED, (s[0], s[1], snake.width, snake.width))
     pygame.draw.rect(screen, GREEN, snake.tail)
 
@@ -104,6 +102,9 @@ while running:
 
     # FPS 맞추기
     clock.tick(FPS)
+
+elapsed_time = time.time() - start_time
+print(f'{round(((len(snake.body) // snake.overlap) ** 3) / elapsed_time, 3)}')
 
 # 게임 종료
 pygame.quit()

@@ -9,7 +9,7 @@ pygame.init()
 # 화면 설정
 screen_size = 630
 screen = pygame.display.set_mode((screen_size, screen_size))
-pygame.display.set_caption('Snake Game')
+pygame.display.set_caption('0')
 
 # 색상 정의
 BLACK = (0, 0, 0)
@@ -46,10 +46,16 @@ start_time = time.time()
 
 # 게임 루프
 running = True
+game_over = False
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+
+    # 죽으면 멈추기
+    if game_over:
+        pygame.display.set_caption(f'점수: {round((((len(snake.body) // snake.overlap) ** 3) / elapsed_time))} 길이: {len(snake.body) // snake.overlap} 시간: {round(elapsed_time)}')
+        continue
 
     # 게임 로직 업데이트
     keys = pygame.key.get_pressed()
@@ -75,7 +81,7 @@ while running:
         snake.x += snake.speed
 
     if snake.x < 0 or snake.x + snake.size[0] > screen_size or snake.y < 0 or snake.y + snake.size[0] > screen_size:
-        running = False
+        game_over = True
 
     if snake.colliderect(snake.tail):
         for i in range(snake.overlap):
@@ -93,19 +99,20 @@ while running:
         pygame.draw.rect(screen, RED, (s[0], s[1], snake.size[0], snake.size[0]))
     for s in snake.body[2 * snake.overlap + 2:]:
         if snake.colliderect(pygame.Rect(s[0], s[1], snake.size[0], snake.size[0])):
-            running = False
+            game_over = True
         pygame.draw.rect(screen, RED, (s[0], s[1], snake.size[0], snake.size[0]))
     pygame.draw.rect(screen, GREEN, snake.tail)
+
+    # 경과 시간 측정 및 점수 표시
+    elapsed_time = (time.time() - start_time)
+    if elapsed_time != 0:
+        pygame.display.set_caption(str(round((((len(snake.body) // snake.overlap) ** 3) / elapsed_time))))
 
     # 화면 업데이트
     pygame.display.flip()
 
     # FPS 맞추기
     clock.tick(FPS)
-
-# 경과 시간 측정 및 점수 출력
-elapsed_time = (time.time() - start_time)
-print(round(((len(snake.body) // snake.overlap) ** 3) / elapsed_time, 3))
 
 # 게임 종료
 pygame.quit()

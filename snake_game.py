@@ -1,7 +1,8 @@
 import pygame
-import time
-from random import *
 import sys
+import os
+from random import *
+import time
 
 # 초기화
 pygame.init()
@@ -9,6 +10,11 @@ pygame.init()
 # 화면 설정
 screen_size = 630
 screen = pygame.display.set_mode((screen_size, screen_size))
+icon_path = 'icon.png'
+if getattr(sys, 'frozen', False): # PyInstaller에 의해 패키징된 경우
+    icon_path = os.path.join(sys._MEIPASS, icon_path)
+icon = pygame.image.load(icon_path).convert()
+pygame.display.set_icon(icon)
 pygame.display.set_caption('0')
 
 # 색상 정의
